@@ -250,7 +250,7 @@ main(int argc, char **argv) {
         if (bench_type == "tpcc")
             test_fn_with_runner = tpcc_do_test_run;
         else if (bench_type == "micro")
-            test_fn_with_runner = rsimple_do_test;
+            test_fn_with_runner = ycsb_do_test;
         else
             ALWAYS_ASSERT(false);
 

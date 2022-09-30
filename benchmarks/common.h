@@ -148,7 +148,7 @@ void start_Silo_workers_micro(abstract_db *db, int threads_nums, int argc, strin
     micro_argv[0] = (char *) bench_type.c_str();
     for (size_t i = 1; i <= bench_toks.size(); i++)
         micro_argv[i] = (char *) bench_toks[i - 1].c_str();
-    bench_runner *R = rsimple_do_test(db, micro_argc, micro_argv);
+    bench_runner *R = ycsb_do_test(db, micro_argc, micro_argv);
 
 #if !defined(LOG_TO_FILE) && defined(PAXOS_LIB_ENABLED)
     // send the ending signal

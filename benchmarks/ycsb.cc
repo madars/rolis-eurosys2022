@@ -4,6 +4,7 @@
 #include <utility>
 #include <string>
 #include <set>
+#include <iomanip>
 
 #include <stdlib.h>
 #include <unistd.h>
@@ -30,6 +31,20 @@ static const size_t YCSBRecordSize = 100;
 // the default is a modification of YCSB "A" we made (80/20 R/W)
 static unsigned g_txn_workload_mix[] = { 80, 20, 0, 0 };
 
+auto get_key(uint64_t wallet_id, uint64_t output_id) -> std::string {
+    auto keystream = std::stringstream();
+    keystream << std::hex << std::setfill('0') << std::setw(32) << (wallet_id + 1);
+    keystream << std::hex << std::setfill('0') << std::setw(32) << output_id;
+    return keystream.str();
+}
+
+auto get_mint_key(uint64_t output_id) -> std::string {
+    auto keystream = std::stringstream();
+    keystream << std::hex << std::setfill('0') << std::setw(32) << 0;
+    keystream << std::hex << std::setfill('0') << std::setw(32) << output_id;
+    return keystream.str();
+}
+
 class ycsb_worker : public bench_worker {
 public:
   ycsb_worker(unsigned int worker_id,
@@ -44,6 +59,11 @@ public:
     obj_key0.reserve(str_arena::MinStrReserveLength);
     obj_key1.reserve(str_arena::MinStrReserveLength);
     obj_v.reserve(str_arena::MinStrReserveLength);
+
+    m_keys_per_worker = nkeys / nthreads;
+    m_current_input = worker_id * m_keys_per_worker;
+    m_current_output = 0;
+    m_current_spent_output = 0;
   }
 
   txn_result
@@ -158,6 +178,81 @@ public:
     return static_cast<ycsb_worker *>(w)->txn_scan();
   }
 
+  txn_result
+  txn_swap()
+  {
+    //cout << "new tx" << endl;
+    void * const txn = db->new_txn(txn_flags, arena, txn_buf(), abstract_db::HINT_DEFAULT);
+
+    uint64_t k0, k1;
+
+    // check if we have enough minted inputs
+    bool mint_keys{false};
+    if(m_current_input + 1 < ((worker_id + 1) * m_keys_per_worker)) {
+      k0 = m_current_input++;
+      k1 = m_current_input++;
+      mint_keys = true;
+    } else {
+      // use a created output
+      ALWAYS_ASSERT(m_current_spent_output + 1 < m_current_output);
+      k0 = m_current_spent_output++;
+      k1 = m_current_spent_output++;
+    }
+
+    // generate two new outputs
+    uint64_t k2, k3;
+    k2 = m_current_output++;
+    k3 = m_current_output++;
+
+    auto inp_key0 = mint_keys ? get_mint_key(k0) : get_key(worker_id, k0);
+    auto inp_key1 = mint_keys ? get_mint_key(k1) : get_key(worker_id, k1);
+    auto out_key0 = get_key(worker_id, k2);
+    auto out_key1 = get_key(worker_id, k3);
+
+    try {
+      //cout << "get keys" << endl;
+      const auto v = std::string("1");
+      obj_v = "";
+      //cout << "get key " << inp_key0 << " " << k0 << " " << mint_keys << " " << m_current_input << " " << m_keys_per_worker << " " << worker_id << endl;
+      ALWAYS_ASSERT(tbl->get(txn, inp_key0, obj_v));
+      //cout << "assert " << obj_v << " == " << v << endl;
+      ALWAYS_ASSERT(obj_v == v);
+      obj_v = "";
+      //cout << "get key " << inp_key1 << endl;
+      ALWAYS_ASSERT(tbl->get(txn, inp_key1, obj_v));
+      //cout << "assert " << obj_v << " == " << v << endl;
+      ALWAYS_ASSERT(obj_v == v);
+
+      //cout << "remove keys" << endl;
+
+      tbl->remove(txn, inp_key0);
+      tbl->remove(txn, inp_key1);
+
+      //cout << "put keys" << endl;
+
+      tbl->put(txn, out_key0, v);
+      tbl->put(txn, out_key1, v);
+
+      computation_n += obj_v.size();
+      measure_txn_counters(txn, "txn_swap");
+      //cout << "commit" << endl;
+      if (likely(db->commit_txn(txn))) {
+        //cout << "done" << endl;
+        return txn_result(true, 0);
+      }
+    } catch (abstract_db::abstract_abort_exception &ex) {
+      db->abort_txn(txn);
+    }
+    return txn_result(false, 0);
+  }
+
+  static txn_result
+  TxnSwap(bench_worker *w)
+  {
+    return static_cast<ycsb_worker *>(w)->txn_swap();
+  }
+
+
   virtual workload_desc_vec
   get_workload() const
   {
@@ -177,7 +272,7 @@ public:
     //w.push_back(workload_desc("Write", 0.2, TxnWrite));
 
     workload_desc_vec w;
-    unsigned m = 0;
+    /*unsigned m = 0;
     for (size_t i = 0; i < ARRAY_NELEMS(g_txn_workload_mix); i++)
       m += g_txn_workload_mix[i];
     ALWAYS_ASSERT(m == 100);
@@ -188,7 +283,8 @@ public:
     if (g_txn_workload_mix[2])
       w.push_back(workload_desc("ReadModifyWrite",  double(g_txn_workload_mix[2])/100.0, TxnRmw));
     if (g_txn_workload_mix[3])
-      w.push_back(workload_desc("Scan",  double(g_txn_workload_mix[3])/100.0, TxnScan));
+      w.push_back(workload_desc("Scan",  double(g_txn_workload_mix[3])/100.0, TxnScan));*/
+    w.push_back(workload_desc("Swap", 1.0, TxnSwap));
     return w;
   }
 
@@ -217,6 +313,11 @@ private:
   string obj_v;
 
   uint64_t computation_n;
+
+  uint64_t m_current_input;
+  uint64_t m_keys_per_worker;
+  uint64_t m_current_output{};
+  uint64_t m_current_spent_output{};
 };
 
 static void
@@ -250,8 +351,8 @@ ycsb_load_keyrange(
         keyend : keystart + ((batchid + 1) * batchsize);
       for (size_t i = batchid * batchsize + keystart; i < rend; i++) {
         ALWAYS_ASSERT(i >= keystart && i < keyend);
-        const string k = u64_varkey(i).str();
-        const string v(YCSBRecordSize, 'a');
+        const auto k = get_mint_key(i);
+        const auto v = std::string("1");
         tbl->insert(txn, k, v);
       }
       if (db->commit_txn(txn))
@@ -415,7 +516,7 @@ protected:
     for (size_t i = 0; i < nthreads; i++)
       ret.push_back(
         new ycsb_worker(
-          blockstart + i, r.next(), db, open_tables,
+          i, r.next(), db, open_tables,
           &barrier_a, &barrier_b));
     return ret;
   }
@@ -461,10 +562,11 @@ private:
 
 };
 
-void
+bench_runner*
 ycsb_do_test(abstract_db *db, int argc, char **argv)
 {
-  nkeys = size_t(scale_factor * 1000.0);
+  //nkeys = size_t(scale_factor * 1000.0);
+  nkeys = 1000000;
   ALWAYS_ASSERT(nkeys > 0);
 
   // parse options
@@ -516,6 +618,7 @@ ycsb_do_test(abstract_db *db, int argc, char **argv)
          << endl;
   }
 
-  ycsb_bench_runner r(db);
-  r.run();
+  auto r = new ycsb_bench_runner(db);
+  r->run_without_stats();
+  return r;
 }

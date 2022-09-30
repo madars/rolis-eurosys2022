@@ -16,12 +16,13 @@
 #include "../rcu.h"
 #include "deptran/s_main.h"
 
-extern void ycsb_do_test(abstract_db *db, int argc, char **argv);
+//extern void ycsb_do_test(abstract_db *db, int argc, char **argv);
 extern void tpcc_do_test(abstract_db *db, int argc, char **argv);
 // quick fix for passing runner
 class bench_runner;
 extern bench_runner* tpcc_do_test_run(abstract_db *db, int argc, char **argv);
 extern bench_runner* rsimple_do_test(abstract_db *db, int argc, char **argv);
+extern bench_runner* ycsb_do_test(abstract_db *db, int argc, char **argv);
 extern void tpcc_simple_do_test(abstract_db *db, int argc, char **argv);
 extern void queue_do_test(abstract_db *db, int argc, char **argv);
 extern void encstress_do_test(abstract_db *db, int argc, char **argv);

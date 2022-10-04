@@ -32,17 +32,36 @@ static const size_t YCSBRecordSize = 100;
 static unsigned g_txn_workload_mix[] = { 80, 20, 0, 0 };
 
 auto get_key(uint64_t wallet_id, uint64_t output_id) -> std::string {
+
     auto keystream = std::stringstream();
-    keystream << std::hex << std::setfill('0') << std::setw(32) << (wallet_id + 1);
-    keystream << std::hex << std::setfill('0') << std::setw(32) << output_id;
-    return keystream.str();
+    keystream << std::hex << std::setfill('0') << std::setw(16) << (wallet_id + 1);
+    keystream << std::hex << std::setfill('0') << std::setw(16) << output_id;
+
+    const auto& str = keystream.str();
+    unsigned int last_val{0};
+    auto outstream = std::stringstream();
+    for(size_t i = 0; i < 4; i++) {
+      last_val = XXH32(str.data(), str.size(), last_val);
+      outstream << std::hex << std::setfill('0') << std::setw(8) << last_val;
+    }
+
+    return outstream.str();
 }
 
 auto get_mint_key(uint64_t output_id) -> std::string {
     auto keystream = std::stringstream();
-    keystream << std::hex << std::setfill('0') << std::setw(32) << 0;
-    keystream << std::hex << std::setfill('0') << std::setw(32) << output_id;
-    return keystream.str();
+    keystream << std::hex << std::setfill('0') << std::setw(16) << 0;
+    keystream << std::hex << std::setfill('0') << std::setw(16) << output_id;
+
+    const auto& str = keystream.str();
+    unsigned int last_val{0};
+    auto outstream = std::stringstream();
+    for(size_t i = 0; i < 4; i++) {
+      last_val = XXH32(str.data(), str.size(), last_val);
+      outstream << std::hex << std::setfill('0') << std::setw(8) << last_val;
+    }
+
+    return outstream.str();
 }
 
 class ycsb_worker : public bench_worker {
@@ -566,7 +585,7 @@ bench_runner*
 ycsb_do_test(abstract_db *db, int argc, char **argv)
 {
   //nkeys = size_t(scale_factor * 1000.0);
-  nkeys = 1000000;
+  nkeys = 100000000;
   ALWAYS_ASSERT(nkeys > 0);
 
   // parse options

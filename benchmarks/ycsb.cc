@@ -53,15 +53,15 @@ auto get_mint_key(uint64_t output_id) -> std::string {
     keystream << std::hex << std::setfill('0') << std::setw(16) << 0;
     keystream << std::hex << std::setfill('0') << std::setw(16) << output_id;
 
-    const auto& str = keystream.str();
+    /*const auto& str = keystream.str();
     unsigned int last_val{0};
     auto outstream = std::stringstream();
     for(size_t i = 0; i < 4; i++) {
       last_val = XXH32(str.data(), str.size(), last_val);
       outstream << std::hex << std::setfill('0') << std::setw(8) << last_val;
-    }
+    }*/
 
-    return outstream.str();
+    return keystream.str();
 }
 
 class ycsb_worker : public bench_worker {
@@ -203,54 +203,29 @@ public:
     //cout << "new tx" << endl;
     void * const txn = db->new_txn(txn_flags, arena, txn_buf(), abstract_db::HINT_DEFAULT);
 
-    uint64_t k0, k1;
+    uint64_t account0 = ((m_current_input++) % m_keys_per_worker) + (m_keys_per_worker * worker_id);
+    uint64_t account1 = ((m_current_input++) % m_keys_per_worker) + (m_keys_per_worker * worker_id);
 
-    // check if we have enough minted inputs
-    bool mint_keys{false};
-    if(m_current_input + 1 < ((worker_id + 1) * m_keys_per_worker)) {
-      k0 = m_current_input++;
-      k1 = m_current_input++;
-      mint_keys = true;
-    } else {
-      // use a created output
-      ALWAYS_ASSERT(m_current_spent_output + 1 < m_current_output);
-      k0 = m_current_spent_output++;
-      k1 = m_current_spent_output++;
-    }
-
-    // generate two new outputs
-    uint64_t k2, k3;
-    k2 = m_current_output++;
-    k3 = m_current_output++;
-
-    auto inp_key0 = mint_keys ? get_mint_key(k0) : get_key(worker_id, k0);
-    auto inp_key1 = mint_keys ? get_mint_key(k1) : get_key(worker_id, k1);
-    auto out_key0 = get_key(worker_id, k2);
-    auto out_key1 = get_key(worker_id, k3);
+    auto out_key0 = get_mint_key(account0);
+    auto out_key1 = get_mint_key(account1);
 
     try {
-      //cout << "get keys" << endl;
-      const auto v = std::string("1");
-      obj_v = "";
-      //cout << "get key " << inp_key0 << " " << k0 << " " << mint_keys << " " << m_current_input << " " << m_keys_per_worker << " " << worker_id << endl;
-      ALWAYS_ASSERT(tbl->get(txn, inp_key0, obj_v));
-      //cout << "assert " << obj_v << " == " << v << endl;
-      ALWAYS_ASSERT(obj_v == v);
-      obj_v = "";
-      //cout << "get key " << inp_key1 << endl;
-      ALWAYS_ASSERT(tbl->get(txn, inp_key1, obj_v));
-      //cout << "assert " << obj_v << " == " << v << endl;
-      ALWAYS_ASSERT(obj_v == v);
+      ALWAYS_ASSERT(tbl->get(txn, out_key0, obj_v));
+      auto acc0_bal = std::stoll(obj_v);
 
-      //cout << "remove keys" << endl;
+      ALWAYS_ASSERT(tbl->get(txn, out_key1, obj_v));
+      auto acc1_bal = std::stoll(obj_v);
+      
+      constexpr auto amt = 1;
+      ALWAYS_ASSERT(acc0_bal >= amt);
+      acc0_bal -= amt;
+      acc1_bal += amt;
 
-      tbl->remove(txn, inp_key0);
-      tbl->remove(txn, inp_key1);
+      auto acc0_bal_str = std::to_string(acc0_bal);
+      tbl->put(txn, out_key0, acc0_bal_str);
 
-      //cout << "put keys" << endl;
-
-      tbl->put(txn, out_key0, v);
-      tbl->put(txn, out_key1, v);
+      auto acc1_bal_str = std::to_string(acc1_bal);
+      tbl->put(txn, out_key1, acc1_bal_str);
 
       computation_n += obj_v.size();
       measure_txn_counters(txn, "txn_swap");
@@ -371,7 +346,7 @@ ycsb_load_keyrange(
       for (size_t i = batchid * batchsize + keystart; i < rend; i++) {
         ALWAYS_ASSERT(i >= keystart && i < keyend);
         const auto k = get_mint_key(i);
-        const auto v = std::string("1");
+        const auto v = std::string("1000");
         tbl->insert(txn, k, v);
       }
       if (db->commit_txn(txn))
@@ -585,7 +560,7 @@ bench_runner*
 ycsb_do_test(abstract_db *db, int argc, char **argv)
 {
   //nkeys = size_t(scale_factor * 1000.0);
-  nkeys = 100000000;
+  nkeys = 1000000;
   ALWAYS_ASSERT(nkeys > 0);
 
   // parse options

@@ -29,32 +29,38 @@ static const size_t YCSBRecordSize = 100;
 // [R, W, RMW, Scan]
 // we're missing remove for now
 // the default is a modification of YCSB "A" we made (80/20 R/W)
-static unsigned g_txn_workload_mix[] = { 80, 20, 0, 0 };
+static unsigned g_txn_workload_mix[] = {80, 20, 0, 0};
 
-auto get_key(uint64_t wallet_id, uint64_t output_id) -> std::string {
-    auto keystream = std::stringstream();
-    keystream << std::hex << std::setfill('0') << std::setw(32) << (wallet_id + 1);
-    keystream << std::hex << std::setfill('0') << std::setw(32) << output_id;
-    return keystream.str();
+auto get_key(uint64_t wallet_id, uint64_t output_id) -> std::string
+{
+  auto ret = std::string();
+  ret.resize(32, '0');
+  std::memcpy(ret.data(), &wallet_id, sizeof(wallet_id));
+  std::memcpy(ret.data() + sizeof(wallet_id), &output_id, sizeof(output_id));
+  return ret;
 }
 
-auto get_mint_key(uint64_t output_id) -> std::string {
-    auto keystream = std::stringstream();
-    keystream << std::hex << std::setfill('0') << std::setw(32) << 0;
-    keystream << std::hex << std::setfill('0') << std::setw(32) << output_id;
-    return keystream.str();
+auto get_mint_key(uint64_t output_id) -> std::string
+{
+  auto ret = std::string();
+  ret.resize(32, '0');
+  uint64_t zero{0};
+  std::memcpy(ret.data(), &zero, sizeof(zero));
+  std::memcpy(ret.data() + sizeof(zero), &output_id, sizeof(output_id));
+  return ret;
 }
 
-class ycsb_worker : public bench_worker {
+class ycsb_worker : public bench_worker
+{
 public:
   ycsb_worker(unsigned int worker_id,
               unsigned long seed, abstract_db *db,
               const map<string, abstract_ordered_index *> &open_tables,
               spin_barrier *barrier_a, spin_barrier *barrier_b)
-    : bench_worker(worker_id, true, seed, db,
-                   open_tables, barrier_a, barrier_b),
-      tbl(open_tables.at("USERTABLE")),
-      computation_n(0)
+      : bench_worker(worker_id, true, seed, db,
+                     open_tables, barrier_a, barrier_b),
+        tbl(open_tables.at("USERTABLE")),
+        computation_n(0)
   {
     obj_key0.reserve(str_arena::MinStrReserveLength);
     obj_key1.reserve(str_arena::MinStrReserveLength);
@@ -69,16 +75,19 @@ public:
   txn_result
   txn_read()
   {
-    void * const txn = db->new_txn(txn_flags, arena, txn_buf(), abstract_db::HINT_KV_GET_PUT);
+    void *const txn = db->new_txn(txn_flags, arena, txn_buf(), abstract_db::HINT_KV_GET_PUT);
     scoped_str_arena s_arena(arena);
-    try {
+    try
+    {
       const uint64_t k = r.next() % nkeys;
       ALWAYS_ASSERT(tbl->get(txn, u64_varkey(k).str(obj_key0), obj_v));
       computation_n += obj_v.size();
       measure_txn_counters(txn, "txn_read");
       if (likely(db->commit_txn(txn)))
         return txn_result(true, 0);
-    } catch (abstract_db::abstract_abort_exception &ex) {
+    }
+    catch (abstract_db::abstract_abort_exception &ex)
+    {
       db->abort_txn(txn);
     }
     return txn_result(false, 0);
@@ -93,16 +102,19 @@ public:
   txn_result
   txn_write()
   {
-    void * const txn = db->new_txn(txn_flags, arena, txn_buf(), abstract_db::HINT_KV_GET_PUT);
+    void *const txn = db->new_txn(txn_flags, arena, txn_buf(), abstract_db::HINT_KV_GET_PUT);
     scoped_str_arena s_arena(arena);
-    try {
+    try
+    {
       auto s = u64_varkey(r.next() % nkeys).str(str());
       auto s2 = str().assign(YCSBRecordSize, 'b');
       tbl->put(txn, s, s2);
       measure_txn_counters(txn, "txn_write");
       if (likely(db->commit_txn(txn)))
         return txn_result(true, 0);
-    } catch (abstract_db::abstract_abort_exception &ex) {
+    }
+    catch (abstract_db::abstract_abort_exception &ex)
+    {
       db->abort_txn(txn);
     }
     return txn_result(false, 0);
@@ -117,9 +129,10 @@ public:
   txn_result
   txn_rmw()
   {
-    void * const txn = db->new_txn(txn_flags, arena, txn_buf(), abstract_db::HINT_KV_RMW);
+    void *const txn = db->new_txn(txn_flags, arena, txn_buf(), abstract_db::HINT_KV_RMW);
     scoped_str_arena s_arena(arena);
-    try {
+    try
+    {
       const uint64_t key = r.next() % nkeys;
       ALWAYS_ASSERT(tbl->get(txn, u64_varkey(key).str(obj_key0), obj_v));
       computation_n += obj_v.size();
@@ -127,7 +140,9 @@ public:
       measure_txn_counters(txn, "txn_rmw");
       if (likely(db->commit_txn(txn)))
         return txn_result(true, 0);
-    } catch (abstract_db::abstract_abort_exception &ex) {
+    }
+    catch (abstract_db::abstract_abort_exception &ex)
+    {
       db->abort_txn(txn);
     }
     return txn_result(false, 0);
@@ -139,7 +154,8 @@ public:
     return static_cast<ycsb_worker *>(w)->txn_rmw();
   }
 
-  class worker_scan_callback : public abstract_ordered_index::scan_callback {
+  class worker_scan_callback : public abstract_ordered_index::scan_callback
+  {
   public:
     worker_scan_callback() : n(0) {}
     virtual bool
@@ -154,19 +170,22 @@ public:
   txn_result
   txn_scan()
   {
-    void * const txn = db->new_txn(txn_flags, arena, txn_buf(), abstract_db::HINT_KV_SCAN);
+    void *const txn = db->new_txn(txn_flags, arena, txn_buf(), abstract_db::HINT_KV_SCAN);
     scoped_str_arena s_arena(arena);
     const size_t kstart = r.next() % nkeys;
     const string &kbegin = u64_varkey(kstart).str(obj_key0);
     const string &kend = u64_varkey(kstart + 100).str(obj_key1);
     worker_scan_callback c;
-    try {
+    try
+    {
       tbl->scan(txn, kbegin, &kend, c);
       computation_n += c.n;
       measure_txn_counters(txn, "txn_scan");
       if (likely(db->commit_txn(txn)))
         return txn_result(true, 0);
-    } catch (abstract_db::abstract_abort_exception &ex) {
+    }
+    catch (abstract_db::abstract_abort_exception &ex)
+    {
       db->abort_txn(txn);
     }
     return txn_result(false, 0);
@@ -181,18 +200,21 @@ public:
   txn_result
   txn_swap()
   {
-    //cout << "new tx" << endl;
-    void * const txn = db->new_txn(txn_flags, arena, txn_buf(), abstract_db::HINT_DEFAULT);
+    // cout << "new tx" << endl;
+    void *const txn = db->new_txn(txn_flags, arena, txn_buf(), abstract_db::HINT_DEFAULT);
 
     uint64_t k0, k1;
 
     // check if we have enough minted inputs
     bool mint_keys{false};
-    if(m_current_input + 1 < ((worker_id + 1) * m_keys_per_worker)) {
+    if (m_current_input + 1 < ((worker_id + 1) * m_keys_per_worker))
+    {
       k0 = m_current_input++;
       k1 = m_current_input++;
       mint_keys = true;
-    } else {
+    }
+    else
+    {
       // use a created output
       ALWAYS_ASSERT(m_current_spent_output + 1 < m_current_output);
       k0 = m_current_spent_output++;
@@ -209,38 +231,42 @@ public:
     auto out_key0 = get_key(worker_id, k2);
     auto out_key1 = get_key(worker_id, k3);
 
-    try {
-      //cout << "get keys" << endl;
+    try
+    {
+      // cout << "get keys" << endl;
       const auto v = std::string("1");
       obj_v = "";
-      //cout << "get key " << inp_key0 << " " << k0 << " " << mint_keys << " " << m_current_input << " " << m_keys_per_worker << " " << worker_id << endl;
+      // cout << "get key " << inp_key0 << " " << k0 << " " << mint_keys << " " << m_current_input << " " << m_keys_per_worker << " " << worker_id << endl;
       ALWAYS_ASSERT(tbl->get(txn, inp_key0, obj_v));
-      //cout << "assert " << obj_v << " == " << v << endl;
+      // cout << "assert " << obj_v << " == " << v << endl;
       ALWAYS_ASSERT(obj_v == v);
       obj_v = "";
-      //cout << "get key " << inp_key1 << endl;
+      // cout << "get key " << inp_key1 << endl;
       ALWAYS_ASSERT(tbl->get(txn, inp_key1, obj_v));
-      //cout << "assert " << obj_v << " == " << v << endl;
+      // cout << "assert " << obj_v << " == " << v << endl;
       ALWAYS_ASSERT(obj_v == v);
 
-      //cout << "remove keys" << endl;
+      // cout << "remove keys" << endl;
 
       tbl->remove(txn, inp_key0);
       tbl->remove(txn, inp_key1);
 
-      //cout << "put keys" << endl;
+      // cout << "put keys" << endl;
 
       tbl->put(txn, out_key0, v);
       tbl->put(txn, out_key1, v);
 
       computation_n += obj_v.size();
       measure_txn_counters(txn, "txn_swap");
-      //cout << "commit" << endl;
-      if (likely(db->commit_txn(txn))) {
-        //cout << "done" << endl;
+      // cout << "commit" << endl;
+      if (likely(db->commit_txn(txn)))
+      {
+        // cout << "done" << endl;
         return txn_result(true, 0);
       }
-    } catch (abstract_db::abstract_abort_exception &ex) {
+    }
+    catch (abstract_db::abstract_abort_exception &ex)
+    {
       db->abort_txn(txn);
     }
     return txn_result(false, 0);
@@ -252,24 +278,23 @@ public:
     return static_cast<ycsb_worker *>(w)->txn_swap();
   }
 
-
   virtual workload_desc_vec
   get_workload() const
   {
-    //w.push_back(workload_desc("Read", 0.95, TxnRead));
-    //w.push_back(workload_desc("ReadModifyWrite", 0.04, TxnRmw));
-    //w.push_back(workload_desc("Write", 0.01, TxnWrite));
+    // w.push_back(workload_desc("Read", 0.95, TxnRead));
+    // w.push_back(workload_desc("ReadModifyWrite", 0.04, TxnRmw));
+    // w.push_back(workload_desc("Write", 0.01, TxnWrite));
 
-    //w.push_back(workload_desc("Read", 1.0, TxnRead));
-    //w.push_back(workload_desc("Write", 1.0, TxnWrite));
+    // w.push_back(workload_desc("Read", 1.0, TxnRead));
+    // w.push_back(workload_desc("Write", 1.0, TxnWrite));
 
     // YCSB workload "A" - 50/50 read/write
-    //w.push_back(workload_desc("Read", 0.5, TxnRead));
-    //w.push_back(workload_desc("Write", 0.5, TxnWrite));
+    // w.push_back(workload_desc("Read", 0.5, TxnRead));
+    // w.push_back(workload_desc("Write", 0.5, TxnWrite));
 
     // YCSB workload custom - 80/20 read/write
-    //w.push_back(workload_desc("Read",  0.8, TxnRead));
-    //w.push_back(workload_desc("Write", 0.2, TxnWrite));
+    // w.push_back(workload_desc("Read",  0.8, TxnRead));
+    // w.push_back(workload_desc("Write", 0.2, TxnWrite));
 
     workload_desc_vec w;
     /*unsigned m = 0;
@@ -289,7 +314,6 @@ public:
   }
 
 protected:
-
   virtual void
   on_run_setup() OVERRIDE
   {
@@ -301,7 +325,8 @@ protected:
   }
 
   inline ALWAYS_INLINE string &
-  str() {
+  str()
+  {
     return *arena.next();
   }
 
@@ -331,25 +356,27 @@ ycsb_load_keyrange(
     uint64_t txn_flags,
     void *txn_buf)
 {
-  if (pin_cpus) {
+  if (pin_cpus)
+  {
     ALWAYS_ASSERT(pinid < nthreads);
     rcu::s_instance.pin_current_thread(pinid);
     rcu::s_instance.fault_region();
   }
 
-  const size_t batchsize = (db->txn_max_batch_size() == -1) ?
-    10000 : db->txn_max_batch_size();
+  const size_t batchsize = (db->txn_max_batch_size() == -1) ? 10000 : db->txn_max_batch_size();
   ALWAYS_ASSERT(batchsize > 0);
   const size_t nkeys = keyend - keystart;
   ALWAYS_ASSERT(nkeys > 0);
   const size_t nbatches = nkeys < batchsize ? 1 : (nkeys / batchsize);
-  for (size_t batchid = 0; batchid < nbatches;) {
+  for (size_t batchid = 0; batchid < nbatches;)
+  {
     scoped_str_arena s_arena(arena);
-    void * const txn = db->new_txn(txn_flags, arena, txn_buf);
-    try {
-      const size_t rend = (batchid + 1 == nbatches) ?
-        keyend : keystart + ((batchid + 1) * batchsize);
-      for (size_t i = batchid * batchsize + keystart; i < rend; i++) {
+    void *const txn = db->new_txn(txn_flags, arena, txn_buf);
+    try
+    {
+      const size_t rend = (batchid + 1 == nbatches) ? keyend : keystart + ((batchid + 1) * batchsize);
+      for (size_t i = batchid * batchsize + keystart; i < rend; i++)
+      {
         ALWAYS_ASSERT(i >= keystart && i < keyend);
         const auto k = get_mint_key(i);
         const auto v = std::string("1");
@@ -359,22 +386,26 @@ ycsb_load_keyrange(
         batchid++;
       else
         db->abort_txn(txn);
-    } catch (abstract_db::abstract_abort_exception &ex) {
+    }
+    catch (abstract_db::abstract_abort_exception &ex)
+    {
       db->abort_txn(txn);
     }
   }
   if (verbose)
     cerr << "[INFO] finished loading USERTABLE range [kstart="
-      << keystart << ", kend=" << keyend << ") - nkeys: " << nkeys << endl;
+         << keystart << ", kend=" << keyend << ") - nkeys: " << nkeys << endl;
 }
 
-class ycsb_usertable_loader : public bench_loader {
+class ycsb_usertable_loader : public bench_loader
+{
 public:
   ycsb_usertable_loader(unsigned long seed,
                         abstract_db *db,
                         const map<string, abstract_ordered_index *> &open_tables)
-    : bench_loader(seed, db, open_tables)
-  {}
+      : bench_loader(seed, db, open_tables)
+  {
+  }
 
 protected:
   virtual void
@@ -382,7 +413,8 @@ protected:
   {
     abstract_ordered_index *tbl = open_tables.at("USERTABLE");
     const size_t nkeysperthd = nkeys / nthreads;
-    for (size_t i = 0; i < nthreads; i++) {
+    for (size_t i = 0; i < nthreads; i++)
+    {
       const size_t keystart = i * nkeysperthd;
       const size_t keyend = min((i + 1) * nkeysperthd, nkeys);
       ycsb_load_keyrange(
@@ -398,7 +430,8 @@ protected:
   }
 };
 
-class ycsb_parallel_usertable_loader : public bench_loader {
+class ycsb_parallel_usertable_loader : public bench_loader
+{
 public:
   ycsb_parallel_usertable_loader(unsigned long seed,
                                  abstract_db *db,
@@ -406,8 +439,8 @@ public:
                                  unsigned int pinid,
                                  uint64_t keystart,
                                  uint64_t keyend)
-    : bench_loader(seed, db, open_tables),
-      pinid(pinid), keystart(keystart), keyend(keyend)
+      : bench_loader(seed, db, open_tables),
+        pinid(pinid), keystart(keystart), keyend(keyend)
   {
     INVARIANT(keyend > keystart);
     if (verbose)
@@ -437,11 +470,11 @@ private:
   uint64_t keyend;
 };
 
-
-class ycsb_bench_runner : public bench_runner {
+class ycsb_bench_runner : public bench_runner
+{
 public:
   ycsb_bench_runner(abstract_db *db)
-    : bench_runner(db)
+      : bench_runner(db)
   {
     open_tables["USERTABLE"] = db->open_index("USERTABLE", YCSBRecordSize);
   }
@@ -452,19 +485,23 @@ protected:
   {
     vector<bench_loader *> ret;
     const unsigned long ncpus = coreid::num_cpus_online();
-    if (enable_parallel_loading && nkeys >= nthreads) {
+    if (enable_parallel_loading && nkeys >= nthreads)
+    {
       // divide the key space amongst all the loaders
       const size_t nkeysperloader = nkeys / ncpus;
-      if (nthreads > ncpus) {
-        for (size_t i = 0; i < ncpus; i++) {
-          const uint64_t kend = (i + 1 == ncpus) ?
-            nkeys : (i + 1) * nkeysperloader;
+      if (nthreads > ncpus)
+      {
+        for (size_t i = 0; i < ncpus; i++)
+        {
+          const uint64_t kend = (i + 1 == ncpus) ? nkeys : (i + 1) * nkeysperloader;
           ret.push_back(
               new ycsb_parallel_usertable_loader(
-                0, db, open_tables, i,
-                i * nkeysperloader, kend));
+                  0, db, open_tables, i,
+                  i * nkeysperloader, kend));
         }
-      } else {
+      }
+      else
+      {
         // load balance the loaders amongst numa nodes in RR fashion
         //
         // XXX: here we hardcode an assumption about the NUMA topology of
@@ -482,22 +519,25 @@ protected:
           node_allocations[i]++;
 
         size_t loader_i = 0;
-        for (size_t i = 0; i < numa_nodes_used.size(); i++) {
+        for (size_t i = 0; i < numa_nodes_used.size(); i++)
+        {
           // allocate loaders_per_node loaders to this numa node
           const vector<unsigned> cpus = numa_node_to_cpus(numa_nodes_used[i]);
           const vector<unsigned> cpus_avail = exclude(cpus, nthreads);
           const unsigned nloaders = node_allocations[i];
-          for (size_t j = 0; j < nloaders; j++, loader_i++) {
-            const uint64_t kend = (loader_i + 1 == ncpus) ?
-              nkeys : (loader_i + 1) * nkeysperloader;
+          for (size_t j = 0; j < nloaders; j++, loader_i++)
+          {
+            const uint64_t kend = (loader_i + 1 == ncpus) ? nkeys : (loader_i + 1) * nkeysperloader;
             ret.push_back(
                 new ycsb_parallel_usertable_loader(
-                  0, db, open_tables, cpus_avail[j % cpus_avail.size()],
-                  loader_i * nkeysperloader, kend));
+                    0, db, open_tables, cpus_avail[j % cpus_avail.size()],
+                    loader_i * nkeysperloader, kend));
           }
         }
       }
-    } else {
+    }
+    else
+    {
       ret.push_back(new ycsb_usertable_loader(0, db, open_tables));
     }
     return ret;
@@ -508,28 +548,28 @@ protected:
   {
     const unsigned alignment = coreid::num_cpus_online();
     const int blockstart =
-      coreid::allocate_contiguous_aligned_block(nthreads, alignment);
+        coreid::allocate_contiguous_aligned_block(nthreads, alignment);
     ALWAYS_ASSERT(blockstart >= 0);
     ALWAYS_ASSERT((blockstart % alignment) == 0);
     fast_random r(8544290);
     vector<bench_worker *> ret;
     for (size_t i = 0; i < nthreads; i++)
       ret.push_back(
-        new ycsb_worker(
-          i, r.next(), db, open_tables,
-          &barrier_a, &barrier_b));
+          new ycsb_worker(
+              i, r.next(), db, open_tables,
+              &barrier_a, &barrier_b));
     return ret;
   }
 
 private:
-
   static vector<unsigned>
   get_numa_nodes_used(unsigned nthds)
   {
     // assuming CPUs [0, nthds) are used, what are all the
     // NUMA nodes touched by [0, nthds)
     set<unsigned> ret;
-    for (unsigned i = 0; i < nthds; i++) {
+    for (unsigned i = 0; i < nthds; i++)
+    {
       const int node = numa_node_of_cpu(i);
       ALWAYS_ASSERT(node >= 0);
       ret.insert(node);
@@ -559,28 +599,28 @@ private:
         ret.push_back(n);
     return ret;
   }
-
 };
 
-bench_runner*
+bench_runner *
 ycsb_do_test(abstract_db *db, int argc, char **argv)
 {
-  //nkeys = size_t(scale_factor * 1000.0);
+  // nkeys = size_t(scale_factor * 1000.0);
   nkeys = 1000000;
   ALWAYS_ASSERT(nkeys > 0);
 
   // parse options
   optind = 1;
-  while (1) {
+  while (1)
+  {
     static struct option long_options[] = {
-      {"workload-mix" , required_argument , 0 , 'w'},
-      {0, 0, 0, 0}
-    };
+        {"workload-mix", required_argument, 0, 'w'},
+        {0, 0, 0, 0}};
     int option_index = 0;
     int c = getopt_long(argc, argv, "w:", long_options, &option_index);
     if (c == -1)
       break;
-    switch (c) {
+    switch (c)
+    {
     case 0:
       if (long_options[option_index].flag != 0)
         break;
@@ -588,19 +628,20 @@ ycsb_do_test(abstract_db *db, int argc, char **argv)
       break;
 
     case 'w':
+    {
+      const vector<string> toks = split(optarg, ',');
+      ALWAYS_ASSERT(toks.size() == ARRAY_NELEMS(g_txn_workload_mix));
+      unsigned s = 0;
+      for (size_t i = 0; i < toks.size(); i++)
       {
-        const vector<string> toks = split(optarg, ',');
-        ALWAYS_ASSERT(toks.size() == ARRAY_NELEMS(g_txn_workload_mix));
-        unsigned s = 0;
-        for (size_t i = 0; i < toks.size(); i++) {
-          unsigned p = strtoul(toks[i].c_str(), nullptr, 10);
-          ALWAYS_ASSERT(p >= 0 && p <= 100);
-          s += p;
-          g_txn_workload_mix[i] = p;
-        }
-        ALWAYS_ASSERT(s == 100);
+        unsigned p = strtoul(toks[i].c_str(), nullptr, 10);
+        ALWAYS_ASSERT(p >= 0 && p <= 100);
+        s += p;
+        g_txn_workload_mix[i] = p;
       }
-      break;
+      ALWAYS_ASSERT(s == 100);
+    }
+    break;
 
     case '?':
       /* getopt_long already printed an error message. */
@@ -611,7 +652,8 @@ ycsb_do_test(abstract_db *db, int argc, char **argv)
     }
   }
 
-  if (verbose) {
+  if (verbose)
+  {
     cerr << "ycsb settings:" << endl;
     cerr << "  workload_mix: "
          << format_list(g_txn_workload_mix, g_txn_workload_mix + ARRAY_NELEMS(g_txn_workload_mix))

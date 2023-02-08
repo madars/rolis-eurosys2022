@@ -5,6 +5,7 @@
 #include <string>
 #include <set>
 #include <iomanip>
+#include <cstring>
 
 #include <stdlib.h>
 #include <unistd.h>

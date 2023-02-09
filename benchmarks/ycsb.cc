@@ -36,8 +36,9 @@ auto get_key(uint64_t wallet_id, uint64_t output_id) -> std::string
 {
   auto ret = std::string();
   ret.resize(32, '0');
-  std::memcpy(ret.data(), &wallet_id, sizeof(wallet_id));
-  std::memcpy(ret.data() + sizeof(wallet_id), &output_id, sizeof(output_id));
+  auto actual_wallet_id = wallet_id + 1;
+  std::memcpy(ret.data(), &actual_wallet_id, sizeof(actual_wallet_id));
+  std::memcpy(ret.data() + sizeof(actual_wallet_id), &output_id, sizeof(output_id));
   return ret;
 }
 
@@ -45,9 +46,7 @@ auto get_mint_key(uint64_t output_id) -> std::string
 {
   auto ret = std::string();
   ret.resize(32, '0');
-  uint64_t zero{0};
-  std::memcpy(ret.data(), &zero, sizeof(zero));
-  std::memcpy(ret.data() + sizeof(zero), &output_id, sizeof(output_id));
+  std::memcpy(ret.data() + sizeof(output_id), &output_id, sizeof(output_id));
   return ret;
 }
 
@@ -606,7 +605,7 @@ bench_runner *
 ycsb_do_test(abstract_db *db, int argc, char **argv)
 {
   // nkeys = size_t(scale_factor * 1000.0);
-  nkeys = 100000;
+  nkeys = 1000000;
   ALWAYS_ASSERT(nkeys > 0);
 
   // parse options

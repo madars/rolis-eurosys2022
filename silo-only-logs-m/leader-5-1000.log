@@ -1,0 +1,241 @@
+allocator::Initialize()
+  hugepgsize: 2097152
+  use MADV_WILLNEED: 1
+  mmap() region [0x7fd6eedfe000, 0x7fd72f5fe000)
+cpu0 owns [0x7fd6eee00000, 0x7fd6fbc00000)
+cpu1 owns [0x7fd6fbc00000, 0x7fd708a00000)
+cpu2 owns [0x7fd708a00000, 0x7fd715800000)
+cpu3 owns [0x7fd715800000, 0x7fd722600000)
+cpu4 owns [0x7fd722600000, 0x7fd72f400000)
+Database Benchmark:
+  pid: 131962
+settings:
+  par-loading : 1
+  pin-cpus    : 1
+  slow-exit   : 0
+  retry-txns  : 0
+  backoff-txns: 0
+  bench       : micro
+  scale       : 5
+  num-cpus    : 20
+  num-threads : 5
+  db-type     : mbta
+  basedir     : /home/sandbox/rolis-eurosys2022
+  txn-flags   : 0
+  Output log  : /dev/shm/GLOGS/GenLogThd5.Time.10/
+  runtime     : 10
+  var-encode  : yes
+  allocator   : jemalloc
+  numa-memory : 1080033280
+  logfiles : []
+  assignments : []
+  disable-gc : 0
+  disable-snapshots : 0
+  stats-server-sockfile: 
+system properties:
+  btree_internal_node_size: 264
+  btree_leaf_node_size    : 312
+  tuple_prefetch          : no
+  btree_node_prefetch     : yes
+paxos batch=50000 :::: 50000
+kSTOBatchSize = 1000
+nthreads = 5
+ycsb settings:
+  workload_mix: [80, 20, 0, 0]
+[INFO] YCSB par loader cpu 0 [0, 5000000)
+[INFO] YCSB par loader cpu 1 [5000000, 10000000)
+[INFO] YCSB par loader cpu 2 [10000000, 15000000)
+[INFO] YCSB par loader cpu 3 [15000000, 20000000)
+[INFO] YCSB par loader cpu 4 [20000000, 25000000)
+[INFO] YCSB par loader cpu 0 [25000000, 30000000)
+[INFO] YCSB par loader cpu 1 [30000000, 35000000)
+[INFO] YCSB par loader cpu 2 [35000000, 40000000)
+[INFO] YCSB par loader cpu 3 [40000000, 45000000)
+[INFO] YCSB par loader cpu 4 [45000000, 50000000)
+[INFO] YCSB par loader cpu 0 [50000000, 55000000)
+[INFO] YCSB par loader cpu 1 [55000000, 60000000)
+[INFO] YCSB par loader cpu 2 [60000000, 65000000)
+[INFO] YCSB par loader cpu 3 [65000000, 70000000)
+[INFO] YCSB par loader cpu 4 [70000000, 75000000)
+[INFO] YCSB par loader cpu 0 [75000000, 80000000)
+[INFO] YCSB par loader cpu 1 [80000000, 85000000)
+[INFO] YCSB par loader cpu 2 [85000000, 90000000)
+[INFO] YCSB par loader cpu 3 [90000000, 95000000)
+[INFO] YCSB par loader cpu 4 [95000000, 100000000)
+Load phase...
+cpu3 starting faulting region (216006656cpu0 starting faulting region (216006656 bytes / cpu2 starting faulting region (216006656 bytes / 103 hugepgs)
+cpu4 starting faulting region (216006656 bytes / 103cpu1 starting faulting region ( bytes / 103 hugepgs)
+ hugepgs)
+103 hugepgs)216006656 bytes / 103 hugepgs)
+
+cpu4 finished faulting region in 106.124 ms
+cpu0 finished faulting region in 114.171 ms
+cpu1 finished faulting region in 116.686 ms
+cpu2 finished faulting region in 136.988 ms
+cpu3 finished faulting region in 163.979 ms
+[INFO] finished loading USERTABLE range [kstart=5000000, kend=10000000) - nkeys: 5000000
+[INFO] finished loading USERTABLE range [kstart=30000000, kend=35000000) - nkeys: 5000000
+[INFO] finished loading USERTABLE range [kstart=10000000, kend=15000000) - nkeys: 5000000
+[INFO] finished loading USERTABLE range [kstart=0, kend=5000000) - nkeys: 5000000
+[INFO] finished loading USERTABLE range [kstart=15000000, kend=20000000) - nkeys: 5000000
+[INFO] finished loading USERTABLE range [kstart=20000000, kend=25000000) - nkeys: 5000000
+[INFO] finished loading USERTABLE range [kstart=45000000, kend=50000000) - nkeys: 5000000
+[INFO] finished loading USERTABLE range [kstart=25000000, kend=30000000) - nkeys: 5000000
+[INFO] finished loading USERTABLE range [kstart=35000000, kend=40000000) - nkeys: 5000000
+[INFO] finished loading USERTABLE range [kstart=55000000, kend=60000000) - nkeys: 5000000
+[INFO] finished loading USERTABLE range [kstart=80000000, kend=85000000) - nkeys: 5000000
+[INFO] finished loading USERTABLE range [kstart=50000000, kend=55000000) - nkeys: 5000000
+[INFO] finished loading USERTABLE range [kstart=85000000, kend=90000000) - nkeys: 5000000
+[INFO] finished loading USERTABLE range [kstart=65000000, kend=70000000) - nkeys: 5000000
+[INFO] finished loading USERTABLE range [kstart=70000000, kend=75000000) - nkeys: 5000000
+[INFO] finished loading USERTABLE range [kstart=95000000, kend=100000000) - nkeys: 5000000
+[INFO] finished loading USERTABLE range [kstart=40000000, kend=45000000) - nkeys: 5000000
+[INFO] finished loading USERTABLE range [kstart=75000000, kend=80000000) - nkeys: 5000000
+[INFO] finished loading USERTABLE range [kstart=60000000, kend=65000000) - nkeys: 5000000
+[INFO] finished loading USERTABLE range [kstart=90000000, kend=95000000) - nkeys: 5000000
+timed region dataloading took 5466.6 ms
+DB size: 17796.5 MB
+[0, 0, 0] txns persisted in loading phase
+starting benchmark...
+[info]bench worker is working on # of num_cpus 0, cpu_gap 0
+ParID now : 0
+ParID now : 2
+ParID now : 3ParID now : 
+1
+ParID now : 4
+[time: 1676453779325] # of commits: 122562
+[time: 1676453779425] # of commits: 286656
+[time: 1676453779525] # of commits: 460416
+[time: 1676453779625] # of commits: 611562
+[time: 1676453779726] # of commits: 769994
+[time: 1676453779826] # of commits: 932356
+[time: 1676453779926] # of commits: 1088798
+[time: 1676453780026] # of commits: 1231629
+[time: 1676453780126] # of commits: 1376969
+[time: 1676453780226] # of commits: 1533791
+[time: 1676453780327] # of commits: 1692033
+[time: 1676453780427] # of commits: 1850377
+[time: 1676453780527] # of commits: 2002456
+[time: 1676453780627] # of commits: 2142615
+[time: 1676453780727] # of commits: 2298451
+[time: 1676453780827] # of commits: 2455385
+[time: 1676453780928] # of commits: 2574107
+[time: 1676453781028] # of commits: 2714533
+[time: 1676453781128] # of commits: 2870327
+[time: 1676453781228] # of commits: 3026662
+[time: 1676453781328] # of commits: 3182365
+[time: 1676453781429] # of commits: 3324780
+[time: 1676453781529] # of commits: 3449026
+[time: 1676453781629] # of commits: 3603331
+[time: 1676453781729] # of commits: 3756735
+[time: 1676453781829] # of commits: 3875291
+[time: 1676453781929] # of commits: 4008287
+[time: 1676453782030] # of commits: 4158710
+[time: 1676453782130] # of commits: 4310292
+[time: 1676453782230] # of commits: 4461751
+[time: 1676453782330] # of commits: 4608570
+[time: 1676453782430] # of commits: 4728494
+[time: 1676453782531] # of commits: 4873382
+[time: 1676453782631] # of commits: 5025228
+[time: 1676453782731] # of commits: 5150520
+[time: 1676453782831] # of commits: 5267938
+[time: 1676453782931] # of commits: 5417091
+[time: 1676453783031] # of commits: 5566677
+[time: 1676453783132] # of commits: 5715389
+[time: 1676453783232] # of commits: 5863223
+[time: 1676453783332] # of commits: 5987129
+[time: 1676453783432] # of commits: 6114746
+[time: 1676453783532] # of commits: 6262415
+[time: 1676453783632] # of commits: 6404395
+[time: 1676453783733] # of commits: 6517975
+[time: 1676453783833] # of commits: 6652265
+[time: 1676453783933] # of commits: 6798014
+[time: 1676453784033] # of commits: 6944113
+[time: 1676453784133] # of commits: 7088419
+[time: 1676453784233] # of commits: 7229985
+[time: 1676453784334] # of commits: 7349473
+[time: 1676453784434] # of commits: 7491359
+[time: 1676453784534] # of commits: 7640010
+[time: 1676453784634] # of commits: 7767982
+[time: 1676453784734] # of commits: 7886189
+[time: 1676453784835] # of commits: 8032034
+[time: 1676453784935] # of commits: 8179176
+[time: 1676453785035] # of commits: 8325961
+[time: 1676453785135] # of commits: 8473748
+[time: 1676453785235] # of commits: 8599628
+[time: 1676453785335] # of commits: 8725029
+[time: 1676453785436] # of commits: 8872298
+[time: 1676453785536] # of commits: 9016840
+[time: 1676453785636] # of commits: 9129264
+[time: 1676453785736] # of commits: 9261135
+[time: 1676453785836] # of commits: 9407480
+[time: 1676453785937] # of commits: 9553769
+[time: 1676453786037] # of commits: 9700888
+[time: 1676453786137] # of commits: 9842467
+[time: 1676453786237] # of commits: 9958737
+[time: 1676453786337] # of commits: 10094528
+[time: 1676453786437] # of commits: 10239868
+[time: 1676453786538] # of commits: 10369796
+[time: 1676453786638] # of commits: 10481261
+[time: 1676453786738] # of commits: 10621814
+[time: 1676453786838] # of commits: 10765805
+[time: 1676453786938] # of commits: 10909514
+[time: 1676453787038] # of commits: 11052701
+[time: 1676453787139] # of commits: 11184965
+[time: 1676453787239] # of commits: 11301222
+[time: 1676453787339] # of commits: 11440496
+[time: 1676453787439] # of commits: 11583766
+[time: 1676453787539] # of commits: 11703471
+[time: 1676453787640] # of commits: 11815494
+[time: 1676453787740] # of commits: 11953348
+[time: 1676453787840] # of commits: 12094529
+[time: 1676453787940] # of commits: 12235393
+[time: 1676453788040] # of commits: 12375712
+[time: 1676453788140] # of commits: 12504236
+[time: 1676453788240] # of commits: 12623951
+[time: 1676453788340] # of commits: 12765267
+[time: 1676453788440] # of commits: 12909570
+[time: 1676453788541] # of commits: 13027881
+[time: 1676453788641] # of commits: 13152283
+[time: 1676453788741] # of commits: 13297413
+[time: 1676453788841] # of commits: 13442920
+[time: 1676453788941] # of commits: 13589683
+[time: 1676453789041] # of commits: 13733700
+[time: 1676453789142] # of commits: 13857503
+[time: 1676453789242] # of commits: 13985789
+[agg_throughput-5-25] [0-5987129]throughput without warmup and cool-down: 922337203685178240.000000
+Info folder has been generated okay ----<<<<<<
+--- benchmark statistics in print_stats ---
+runtime: 10.0174 sec
+memory delta: 7182.07 MB
+memory delta rate: 716.963 MB/sec
+logical memory delta: 0 MB
+logical memory delta rate: 0 MB/sec
+agg_nosync_throughput: 1.39618e+06 ops/sec
+avg_nosync_per_core_throughput: 279237 ops/sec/core
+agg_throughput: 1.39616e+06 ops/sec
+n_commits: 13985855 , elapsed: 10.0174
+avg_per_core_throughput: 279232 ops/sec/core
+agg_persist_throughput: 1.39616e+06 ops/sec
+avg_per_core_persist_throughput: 279232 ops/sec/core
+avg_latency: 0.00356147 ms
+avg_persist_latency: 0 ms
+agg_abort_rate: 0 aborts/sec
+avg_per_core_abort_rate: 0 aborts/sec/core
+txn breakdown: [[Swap, 13985855]]
+--- system counters (for benchmark) ---
+--- perf counters (if enabled, for benchmark) ---
+--- allocator stats ---
+[allocator] ncpus=5
+[allocator] cpu=0 fully_faulted?=1 remaining=216006656 bytes
+[allocator] cpu=1 fully_faulted?=1 remaining=216006656 bytes
+[allocator] cpu=2 fully_faulted?=1 remaining=216006656 bytes
+[allocator] cpu=3 fully_faulted?=1 remaining=216006656 bytes
+[allocator] cpu=4 fully_faulted?=1 remaining=216006656 bytes
+---------------------------------------
+dumping heap profile...
+printing jemalloc stats...
+1396162.181302 1396162.181302 0.003561 0.000000 0.000000 0
+total log_size: payment => 0, new_order => 0, delivery => 0
+close handle all started
+close_all all ok

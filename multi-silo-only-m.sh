@@ -1,15 +1,16 @@
 #!/bin/bash
 # ulimit -n 8000
 # ----------------------------------------------------------------------------- compile ------------------------------------------------------------------------------------------
-sudo pkill -f dbtest
+pkill -f dbtest
 mkdir -p silo-only-logs-m
-make clean && make -j dbtest MODE=perf SERIALIZE=0 PAXOS_ENABLE_CONFIG=0 STO_BATCH_CONFIG=0 SILO_SERIAL_CONFIG=0 PAXOS_ZERO_CONFIG=0 LOGGING_TO_ONLY_FILE=0 OPTIMIZED_REPLAY=0 REPLAY_FOLLOWER=0 DBTEST_PROFILER=0
+# make clean
+CPATH=$HOME/root/usr/local/include LIBRARY_PATH=$HOME/root/usr/local/lib make -j20 dbtest MODE=perf SERIALIZE=0 PAXOS_ENABLE_CONFIG=0 STO_BATCH_CONFIG=0 SILO_SERIAL_CONFIG=0 PAXOS_ZERO_CONFIG=0 LOGGING_TO_ONLY_FILE=0 OPTIMIZED_REPLAY=0 REPLAY_FOLLOWER=0 DBTEST_PROFILER=0
 
 sleep 1
 
 sstart=$1
 eend=$2
-defvalue=0
+defvalue=1
 skip_cgroup=${3:-$defvalue}
 
 # ----------------------------------------------------------------------------- RUN ------------------------------------------------------------------------------------------

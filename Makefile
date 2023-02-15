@@ -130,7 +130,7 @@ endif
 
 #LOG_FLAGS
 # https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html
-CXXFLAGS := -g  -std=gnu++1z -Wall -Wno-unused -Wno-sign-compare
+CXXFLAGS := -g  -std=gnu++1z -Wall -Wno-unused -Wno-sign-compare -Wno-class-memaccess -Wno-address-of-packed-member -Wno-maybe-uninitialized -Wno-unused-result
 CXXFLAGS += -MD -MP -Ithird-party/lz4 -Ithird-party/paxos/src -DCONFIG_H=\"$(CONFIG_H)\"
 ifeq ($(GPROF_S),1)
 	CXXFLAGS += -pg -static-libstdc++ -static-libgcc
@@ -342,7 +342,8 @@ $(O)/benchmarks/sto/%.o: benchmarks/sto/%.cc $(O)/buildstamp $(O)/buildstamp.ben
 .PHONY: dbclient
 dbclient: $(O)/benchmarks/dbclient
 
-$(O)/benchmarks/dbclient: $(O)/benchmarks/dbclient.o $(OBJFILES) $(MASSTREE_OBJFILES) $(BENCH_OBJFILES) third-party/paxos/build/libtxlog.so third-party/lz4/liblz4.so
+#third-party/paxos/build/libtxlog.so
+$(O)/benchmarks/dbclient: $(O)/benchmarks/dbclient.o $(OBJFILES) $(MASSTREE_OBJFILES) $(BENCH_OBJFILES) third-party/lz4/liblz4.so
 	$(CXX) -o $(O)/benchmarks/dbclient $^ $(BENCH_LDFLAGS) $(LZ4LDFLAGS) -Lthird-party/paxos/build $(LOG_FLAGS)
 
 .PHONY = ht_mt2
@@ -391,7 +392,8 @@ masstree/configure masstree/config.h.in: masstree/configure.ac
 .PHONY: dbtest
 dbtest: $(O)/benchmarks/dbtest
 
-$(O)/benchmarks/dbtest: $(O)/benchmarks/dbtest.o $(OBJFILES) $(MASSTREE_OBJFILES) $(BENCH_OBJFILES) third-party/paxos/build/libtxlog.so third-party/lz4/liblz4.so
+#third-party/paxos/build/libtxlog.so
+$(O)/benchmarks/dbtest: $(O)/benchmarks/dbtest.o $(OBJFILES) $(MASSTREE_OBJFILES) $(BENCH_OBJFILES) third-party/lz4/liblz4.so
 	$(CXX) -o $(O)/benchmarks/dbtest $^ $(BENCH_LDFLAGS) $(LZ4LDFLAGS) -Lthird-party/paxos/build $(LOG_FLAGS)
 
 DEPFILES := $(wildcard $(O)/*.d $(O)/*/*.d $(O)/*/*/*.d masstree/_masstree_config.d)

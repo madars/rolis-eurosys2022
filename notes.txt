@@ -1,0 +1,13 @@
+edit the number of keys here in benchmarks/ycsb.cc -- nkeys = 1000000;
+
+sudo apt-get install libjemalloc-dev libnuma-dev
+
+for rpclib:
+
+make $HOME/root
+cd rpclib
+make DESTDIR=$HOME/root install
+
+afterwards use:
+
+CPATH=$HOME/root/usr/local/include LIBRARY_PATH=$HOME/root/usr/local/lib make dbtest ...

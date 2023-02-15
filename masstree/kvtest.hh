@@ -164,13 +164,24 @@ void kvtest_rw1(C &client)
 // do a bunch of inserts to distinct keys, then check that they all showed up.
 // sometimes overwrites, but only w/ same value.
 // different clients might use same key sometimes.
+
+const uint64_t RANDOM = __builtin_ia32_rdtsc();
+
+uint64_t mix64(uint64_t z) {
+    // https://gee.cs.oswego.edu/dl/papers/oopsla14.pdf
+    z = z + RANDOM;
+    z = (z ^ (z >> 30)) * 0xbf58476d1ce4e5b9LL;
+    z = (z ^ (z >> 27)) * 0x94d049bb133111ebLL;
+    return z ^ (z >> 31);
+}
+
 template <typename C>
 void kvtest_rw1long_seed(C &client, int seed)
 {
     const char * const formats[] = {
         "user%u", "machine%u", "opening%u", "fartparade%u"
     };
-    char buf[64];
+    char buf[32];
 
     client.rand.reset(seed);
     double tp0 = client.now();
@@ -178,7 +189,17 @@ void kvtest_rw1long_seed(C &client, int seed)
     for (n = 0; !client.timeout(0) && n <= client.limit(); ++n) {
         unsigned fmt = client.rand.next();
         int32_t x = (int32_t) client.rand.next();
-        client.put(Str::snprintf(buf, sizeof(buf), formats[fmt % 4], x), x + 1);
+
+	uint64_t a = mix64(x);
+        uint64_t b = mix64(x^a);
+        uint64_t c = mix64(x^b);
+        uint64_t d = mix64(x^c);
+	memcpy(buf, &a, 8);
+	memcpy(buf+8, &b, 8);
+	memcpy(buf+16, &c, 8);
+	memcpy(buf+24, &d, 8);
+
+        client.put(Str(buf, 32), x + 1);
     }
     client.wait_all();
     double tp1 = client.now();
@@ -201,7 +222,17 @@ void kvtest_rw1long_seed(C &client, int seed)
     for (g = 0; g < n && !client.timeout(1); ++g) {
         unsigned fmt = a[2 * g];
         int32_t x = (int32_t) a[2 * g + 1];
-        client.get_check(Str::snprintf(buf, sizeof(buf), formats[fmt % 4], x), x + 1);
+
+        uint64_t a = mix64(x);
+        uint64_t b = mix64(x^a);
+        uint64_t c = mix64(x^b);
+        uint64_t d = mix64(x^c);
+	memcpy(buf, &a, 8);
+	memcpy(buf+8, &b, 8);
+	memcpy(buf+16, &c, 8);
+	memcpy(buf+24, &d, 8);
+
+        client.get_check(Str(buf, 32), x + 1);
     }
     client.wait_all();
     double tg1 = client.now();

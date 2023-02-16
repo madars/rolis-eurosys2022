@@ -3,3 +3,5 @@
 *.o
 *~
 rpclib/
+out-perf.masstree/
+silo-only-logs-m/

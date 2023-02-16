@@ -342,8 +342,8 @@ $(O)/benchmarks/sto/%.o: benchmarks/sto/%.cc $(O)/buildstamp $(O)/buildstamp.ben
 .PHONY: dbclient
 dbclient: $(O)/benchmarks/dbclient
 
-#third-party/paxos/build/libtxlog.so
-$(O)/benchmarks/dbclient: $(O)/benchmarks/dbclient.o $(OBJFILES) $(MASSTREE_OBJFILES) $(BENCH_OBJFILES) third-party/lz4/liblz4.so
+$(O)/benchmarks/dbclient: $(O)/benchmarks/dbclient.o $(OBJFILES) $(MASSTREE_OBJFILES) $(BENCH_OBJFILES) third-party/lz4/liblz4.so third-party/paxos/build/libtxlog.so
+
 	$(CXX) -o $(O)/benchmarks/dbclient $^ $(BENCH_LDFLAGS) $(LZ4LDFLAGS) -Lthird-party/paxos/build $(LOG_FLAGS)
 
 .PHONY = ht_mt2
@@ -392,8 +392,7 @@ masstree/configure masstree/config.h.in: masstree/configure.ac
 .PHONY: dbtest
 dbtest: $(O)/benchmarks/dbtest
 
-#third-party/paxos/build/libtxlog.so
-$(O)/benchmarks/dbtest: $(O)/benchmarks/dbtest.o $(OBJFILES) $(MASSTREE_OBJFILES) $(BENCH_OBJFILES) third-party/lz4/liblz4.so
+$(O)/benchmarks/dbtest: $(O)/benchmarks/dbtest.o $(OBJFILES) $(MASSTREE_OBJFILES) $(BENCH_OBJFILES) third-party/lz4/liblz4.so third-party/paxos/build/libtxlog.so
 	$(CXX) -o $(O)/benchmarks/dbtest $^ $(BENCH_LDFLAGS) $(LZ4LDFLAGS) -Lthird-party/paxos/build $(LOG_FLAGS)
 
 DEPFILES := $(wildcard $(O)/*.d $(O)/*/*.d $(O)/*/*/*.d masstree/_masstree_config.d)

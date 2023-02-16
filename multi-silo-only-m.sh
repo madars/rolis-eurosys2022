@@ -13,6 +13,8 @@ eend=$2
 defvalue=1
 skip_cgroup=${3:-$defvalue}
 
+export LD_LIBRARY_PATH=$HOME/root/usr/local/lib
+
 # ----------------------------------------------------------------------------- RUN ------------------------------------------------------------------------------------------
 for (( trd=$sstart; trd<=$eend; trd++ ))
 do

@@ -9,7 +9,7 @@ CHECK_INVARIANTS ?= 0
 # 1 = jemalloc
 # 2 = tcmalloc
 # 3 = flow
-USE_MALLOC_MODE ?= 2
+USE_MALLOC_MODE ?= 1
 
 # Available modes
 #   * perf

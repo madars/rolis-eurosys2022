@@ -605,7 +605,7 @@ bench_runner *
 ycsb_do_test(abstract_db *db, int argc, char **argv)
 {
   // nkeys = size_t(scale_factor * 1000.0);
-  nkeys = 100'000'000;
+  nkeys = 400'000'000;
   ALWAYS_ASSERT(nkeys > 0);
 
   // parse options

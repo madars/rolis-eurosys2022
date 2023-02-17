@@ -12,7 +12,9 @@ clients=(
 #workdir="~/weihai-projects"
 
 cmd1=""
-cmd2="sudo skill dbtest;sudo pkill dbtest; sleep 1"
+# madars
+#cmd2="sudo skill dbtest;sudo pkill dbtest; sleep 1"
+cmd2="sudo pkill -9 dbtest; sleep 1"
 cmd3="sudo rm -rf $workdir/$repos/xxxx15/*; sudo rm -rf $workdir/$repos/xxxx15_micro/*" # sudo rm -rf ~/meerkat/logs/* && sudo rm -rf /tmp/* && sudo rm -rf ~/boost_1_70_0 ~/boost_1_70_0.tar.bz2 ~/dpdk-19.11.5.tar.gz ~/dpdk-stable-19.11.5 ~/eRPC"
 cmd4=""
 cmd5=""
@@ -39,8 +41,12 @@ else
 fi
 
 
-cmd1="cd $workdir ; sudo rm -rf $repos; scp -r $username@$leadrIP:$workdir/$repos ."
-cmd2="sudo skill dbtest;sudo pkill dbtest; sleep 1"
+# madars
+#cmd1="cd $workdir ; sudo rm -rf $repos; scp -r $username@$leadrIP:$workdir/$repos ."
+cmd1="cd $workdir ; sudo rm -rf $repos; ssh $leadrIP 'cd $workdir; tar cf - root $repos/third-party/lz4/liblz4.so $repos/third-party/paxos/build/libtxlog.so $repos/third-party/paxos/config --exclude=\"$repos/third_party/*\" $repos' | tar xf -"
+# madars
+#cmd2="sudo skill dbtest;sudo pkill dbtest; sleep 1"
+cmd2="sudo pkill -9 dbtest; sleep 1"
 cmd3="sudo rm -rf $workdir/$repos/xxxx15/*; sudo rm -rf $workdir/$repos/xxxx15_micro/*"
 cmd4=""
 cmd5=""

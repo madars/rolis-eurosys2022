@@ -28,7 +28,9 @@ maxCPU = int(sys.argv[2])
 flag = int(sys.argv[3])
 
 
-killCommand = "sudo pkill -f dbtest"
+# madars
+#killCommand = "sudo pkill -f dbtest"
+killCommand = "sudo pkill -9 dbtest ; sleep 1"
 
 
 if __name__ == "__main__":
@@ -59,7 +61,7 @@ if __name__ == "__main__":
         os.system(cmd)
         time.sleep(1)
         follower2.send("msg8".encode())
-        time.sleep(cores+30+30)
+        time.sleep(cores+30+180)
     follower.close()
     follower2.close()
     os.system(killCommand)

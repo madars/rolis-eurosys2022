@@ -1,4 +1,8 @@
 #!/bin/bash
+export CPATH=/home/ubuntu/root/usr/local/include
+export LIBRARY_PATH=/home/ubuntu/root/usr/local/lib
+export LD_LIBRARY_PATH=/home/ubuntu/root/usr/local/lib
+
 repos="rolis-eurosys2022"  # repos name, default
 workdir="~"  # we default put our repos under the root
 leadrIP=$( cat ./scripts/ip_leader_replica )
@@ -6,9 +10,9 @@ p1=$( cat ./scripts/ip_p1_follower_replica )
 p2=$( cat ./scripts/ip_p2_follower_replica )
 ulimit -n 10000
 # minimum of the number of worker threads
-start=1
+start=8
 # maximum of the number of worker threads
-end=31
+end=8
 
 setup () {
     bash ./batch_silo.sh kill
@@ -160,11 +164,11 @@ experiment8 () {
 
 
 setup
-experiment1
-experiment2
-experiment3
+#experiment1
+#experiment2
+#experiment3
 experiment4
-experiment5
-experiment6
-experiment7
-experiment8
+#experiment5
+#experiment6
+#experiment7
+#experiment8

@@ -18,7 +18,9 @@ minCPU = int(sys.argv[1])
 maxCPU = int(sys.argv[2])
 flag = int(sys.argv[3])
 
-killCommand = "sudo pkill -f dbtest"
+# madars
+#killCommand = "sudo pkill -f dbtest"
+killCommand = "sudo pkill -9 dbtest ; sleep 1"
 
 if __name__ == "__main__":
     server = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
@@ -38,7 +40,7 @@ if __name__ == "__main__":
         cmd="sudo ./mb2.sh "+str(cores)
         logging.info("start to execute: " + cmd)
         os.system(cmd)
-    time.sleep(maxCPU+30+30)
+    time.sleep(maxCPU+30+180)
     connection.close()
     server.close()
     os.system(killCommand)

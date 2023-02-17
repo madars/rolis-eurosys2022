@@ -1,6 +1,10 @@
 #!/bin/bash
 # ulimit -n 8000
 # ----------------------------------------------------------------------------- compile ------------------------------------------------------------------------------------------
+export CPATH=/home/ubuntu/root/usr/local/include
+export LIBRARY_PATH=/home/ubuntu/root/usr/local/lib
+export LD_LIBRARY_PATH=/home/ubuntu/root/usr/local/lib
+
 sudo pkill -f dbtest
 # make paxos
 make clean && make -j dbtest MODE=perf \

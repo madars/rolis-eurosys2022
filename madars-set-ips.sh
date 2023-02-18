@@ -9,6 +9,6 @@ echo $IP_OREGON > scripts/ip_p2_follower_replica
 
 for fn in third-party/paxos/config/1silo_1paxos_2follower/*.yml; do
     sed -i "s|localhost: .*\$|localhost: $IP_LEADER|" $fn
-    sed -i "s|p1: .*\$|localhost: $IP_OHIO|" $fn
-    sed -i "s|p2: .*\$|localhost: $IP_OREGON|" $fn
+    sed -i "s|p1: .*\$|p1: $IP_OHIO|" $fn
+    sed -i "s|p2: .*\$|p2: $IP_OREGON|" $fn
 done

@@ -4,10 +4,9 @@ workdir="~"  # we default put our repos under the root
 leadrIP=$( cat ./scripts/ip_leader_replica )
 p1=$( cat ./scripts/ip_p1_follower_replica )
 p2=$( cat ./scripts/ip_p2_follower_replica )
-ulimit -n 10000
 
 # minimum of the number of worker threads
-start=1
+start=16
 # maximum of the number of worker threads
 end=31
 
@@ -23,18 +22,15 @@ experiment4 () {
     bash ./batch_silo.sh scp
 
     for i in $(seq $start $end); do
+	echo "[+] Killing old processes"
 	bash ./batch_silo.sh kill
 
-	eval "ulimit -n 10000; cd $workdir/$repos/ && sudo ./madars-mb0.sh $i" &
-	sleep 1
+	echo "[+] Launching new experiment on $i threads"
+	eval "cd $workdir/$repos/ && ./madars-mb0.sh $i" &
+	ssh $p1 "cd $workdir/$repos/ && ./madars-mb1.sh $i" &
+	ssh $p2 "cd $workdir/$repos/ && ./madars-mb2.sh $i" &
 
-	ssh $p2 "ulimit -n 10000; cd $workdir/$repos/ && sudo ./madars-mb2.sh $i" &
-	sleep 1
-
-	ssh $p1 "ulimit -n 10000; cd $workdir/$repos/ && sudo ./madars-mb1.sh $i" &
-	sleep 1
-
-	echo "Wait for jobs..."
+	echo "[+] Wait for new experiment to finish"
 	FAIL=0
 
 	while true; do
@@ -45,7 +41,9 @@ experiment4 () {
 	    sleep 1
 	done
 
-	sleep 10
+	echo "[+] At least one process terminated. Results:"
+	cat xxxx15_micro/leader-$i-1000.log | grep "agg_throughput"
+	echo "[+] End results"
     done
 
     python3 scripts/extractor.py 0 xxxx15_micro  "agg_throughput:" "ops/sec" > results/scalability-ycsb.log

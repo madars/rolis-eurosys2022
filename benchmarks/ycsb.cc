@@ -235,12 +235,12 @@ public:
     {
       // cout << "get keys" << endl;
       const auto v = std::string("1");
-      obj_v = "";
+      //obj_v = "";
       // cout << "get key " << inp_key0 << " " << k0 << " " << mint_keys << " " << m_current_input << " " << m_keys_per_worker << " " << worker_id << endl;
       ALWAYS_ASSERT(tbl->get(txn, inp_key0, obj_v));
       // cout << "assert " << obj_v << " == " << v << endl;
       ALWAYS_ASSERT(obj_v == v);
-      obj_v = "";
+      //obj_v = "";
       // cout << "get key " << inp_key1 << endl;
       ALWAYS_ASSERT(tbl->get(txn, inp_key1, obj_v));
       // cout << "assert " << obj_v << " == " << v << endl;

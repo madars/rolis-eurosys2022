@@ -227,7 +227,7 @@ void BulkCoordinatorMultiPaxos::GotoNextPhase() {
       if(phase_ > 3){
         break;
       }
-      Prepare();
+      //Prepare();
       if(!in_submission_){
         break;
       }

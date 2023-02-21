@@ -428,6 +428,7 @@ bench_runner::run_without_stats()
   const vector<bench_loader *> loaders = make_loaders();
   if (f_mode == 0) { // weihai, f_mode==0 is normal to load data
       {
+    	std::cout << "Time right before load phase: " << timeSinceEpochMillisecBench() << std::endl;
           std::cout << "Load phase..." << std::endl;
           spin_barrier b(loaders.size());
           const pair<uint64_t, uint64_t> mem_info_before = get_system_memory_info();
@@ -449,6 +450,7 @@ bench_runner::run_without_stats()
               cerr << "DB size: " << delta_mb << " MB" << endl;
       }
 
+      std::cout << "Time right before do_txn_epoch_sync: " << timeSinceEpochMillisecBench() << std::endl;
       db->do_txn_epoch_sync(); // also waits for worker threads to be persisted
       {
           const auto persisted_info = db->get_ntxn_persisted();
@@ -458,6 +460,7 @@ bench_runner::run_without_stats()
           if (verbose)
               cerr << persisted_info << " txns persisted in loading phase" << endl;
       }
+      std::cout << "Time right before reset_ntxn_persisted: " << timeSinceEpochMillisecBench() << std::endl;
       db->reset_ntxn_persisted();
 
       if (!no_reset_counters) {
@@ -488,6 +491,7 @@ bench_runner::run_without_stats()
 //      cerr << "table " << it->first << " size " << s << endl;
 //      table_sizes_before[it->first] = s;
 //    }
+    std::cout << "Time right before 'starting benchmark': " << timeSinceEpochMillisecBench() << std::endl;
     cerr << "starting benchmark..." << endl;
   }
 
@@ -512,6 +516,7 @@ bench_runner::run_without_stats()
       int base = 0;
 
       std::cout << "[info]bench worker is working on # of num_cpus " << num_cpus << ", cpu_gap " << cpu_gap << std::endl;
+      std::cout << "Time right before starting workers: " << timeSinceEpochMillisecBench() << std::endl;
       for (vector<bench_worker *>::const_iterator it = workers.begin();
            it != workers.end(); ++it) {
           if(cpu_gap) {
@@ -526,11 +531,13 @@ bench_runner::run_without_stats()
           }
       }
 
+      std::cout << "Time right before barrier: " << timeSinceEpochMillisecBench() << std::endl;
       barrier_a.wait_for(); // wait for all threads to start up
       // missing t,t_nosync
       _t.init();
       _t_nosync.init();
 
+      std::cout << "Time right before bombs away: " << timeSinceEpochMillisecBench() << std::endl;
       barrier_b.count_down(); // bombs away!
       uint64_t n_commits_5 = 0 ;
       uint64_t n_commits_25 = 0 ;
@@ -560,10 +567,13 @@ bench_runner::run_without_stats()
       }
       printf("[agg_throughput-5-25] [%lu-%lu]throughput without warmup and cool-down: %f\n", n_commits_25, n_commits_5, (n_commits_25 - n_commits_5) / 20.0);
       __sync_synchronize();
+      std::cout << "Time right before workers.join: " << timeSinceEpochMillisecBench() << std::endl;
       for (size_t i = 0; i < nthreads; i++)
           workers[i]->join();
       const unsigned long elapsed_nosync = _t_nosync.lap();
+      std::cout << "Time right before do_txn_finish: " << timeSinceEpochMillisecBench() << std::endl;
       db->do_txn_finish(); // waits for all worker txns to persist
+      std::cout << "Time right after do_txn_finish: " << timeSinceEpochMillisecBench() << std::endl;
       //  usleep(100000);
 
       temp_info_.loaders = loaders;
@@ -572,6 +582,7 @@ bench_runner::run_without_stats()
       temp_info_.mem_info_before = mem_info_before;
       temp_info_.table_sizes_before = table_sizes_before;
   }
+  std::cout << "Time right before exiting run_without_stats: " << timeSinceEpochMillisecBench() << std::endl;
 }
 
 std::map<std::string, abstract_ordered_index *>

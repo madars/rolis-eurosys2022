@@ -49,6 +49,11 @@ split_ws(const string &s) {
     return r;
 }
 
+uint64_t timeSinceEpochMillisecBench_lol() {
+    using namespace std::chrono;
+    return duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+}
+
 static size_t
 parse_memory_spec(const string &s) {
     string x(s);
@@ -148,27 +153,38 @@ void start_Silo_workers_micro(abstract_db *db, int threads_nums, int argc, strin
     micro_argv[0] = (char *) bench_type.c_str();
     for (size_t i = 1; i <= bench_toks.size(); i++)
         micro_argv[i] = (char *) bench_toks[i - 1].c_str();
+
+    std::cout << "Time right before ycsb_do_test: " << timeSinceEpochMillisecBench_lol() << std::endl;
     bench_runner *R = ycsb_do_test(db, micro_argc, micro_argv);
+    std::cout << "Time right after ycsb_do_test: " << timeSinceEpochMillisecBench_lol() << std::endl;
 
 #if !defined(LOG_TO_FILE) && defined(PAXOS_LIB_ENABLED)
     // send the ending signal
+    std::cout << "Time right before add_log_to_nc: " << timeSinceEpochMillisecBench_lol() << std::endl;
     std::string endLogInd = "";
     for (int i = 0; i < threads_nums; i++)
         add_log_to_nc((char *) endLogInd.c_str(), 0, i);
+    std::cout << "Time right after add_log_to_nc: " << timeSinceEpochMillisecBench_lol() << std::endl;
 #endif
 
     // wait for all acknowledges
 #if defined(ALLOW_WAIT_AT_PAXOS_END) && defined(PAXOS_LIB_ENABLED)
     vector<std::thread> wait_threads;
+    std::cout << "Time right before wait_threads: " << timeSinceEpochMillisecBench_lol() << std::endl;
       for(int i = 0; i < nthreads; i++){
           wait_threads.push_back(std::thread([i](){
            std::cout << "Starting wait for " << i << std::endl;
+	   std::cout << "Time right before wait_for_submit(" << i << "): " << timeSinceEpochMillisecBench_lol() << std::endl;
            wait_for_submit(i);
+	   std::cout << "Time right after wait_for_submit(" << i << "): " << timeSinceEpochMillisecBench_lol() << std::endl;
           }));
       }
+      std::cout << "Time right after wait_threads: " << timeSinceEpochMillisecBench_lol() << std::endl;
+
       for (auto& th : wait_threads) {
           th.join();
       }
+      std::cout << "Time right after th.join: " << timeSinceEpochMillisecBench_lol() << std::endl;
 #endif
     R->print_stats();
 }

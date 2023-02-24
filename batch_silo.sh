@@ -43,7 +43,7 @@ fi
 
 # madars
 #cmd1="cd $workdir ; sudo rm -rf $repos; scp -r $username@$leadrIP:$workdir/$repos ."
-cmd1="cd $workdir ; sudo rm -rf $repos; ssh $leadrIP 'cd $workdir; tar cf - root $repos/third-party/lz4/liblz4.so $repos/third-party/paxos/build/libtxlog.so $repos/third-party/paxos/config --exclude=\"$repos/third_party/*\" $repos' | tar xf -"
+cmd1="cd $workdir ; sudo rm -rf $repos; ssh $leadrIP 'cd $workdir; tar cf - root $repos/third-party/lz4/liblz4.so $repos/third-party/paxos/build/libtxlog.so $repos/third-party/paxos/config --exclude=\"$repos/third-party/*\" $repos' | tar xf -"
 # madars
 #cmd2="sudo skill dbtest;sudo pkill dbtest; sleep 1"
 cmd2="sudo pkill -9 dbtest; sleep 1"
